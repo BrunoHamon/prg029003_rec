@@ -31,14 +31,23 @@ void destruir_pessoa(pessoa_t *pessoa) {
 
 void destruir_no(no_t *no) {
   if (no != NULL) {
-    free(no);
+    free(no->chave);
+    destruir_pessoa(no->valor);
+      free(no);
   }
 }
 
 void destruir_dicionario(dicionario_t *d) {
     if (d != NULL) {
         for (int i = 0; i < d->tamanho; ++i) {
-            destruir_no(d->vetor[i]);
+            no_t* atual = d->vetor[i];
+            no_t* proximo;
+            while (atual != NULL) {
+                proximo = atual->prox;
+                destruir_no(atual);
+                atual = proximo;
+            }
+            *d->vetor = NULL;
         }
         free(d->vetor);
         free(d);
@@ -50,7 +59,7 @@ int hash(const char *chave, int m) {
     for (int i = 0; chave[i] != '\0'; i++) {
         soma += (i + 1) * chave[i];
     }
-    return soma  m;
+    return soma % m;
 }
 
 bool inserir(dicionario_t *d, char *chave, pessoa_t *valor) {
@@ -65,8 +74,18 @@ bool inserir(dicionario_t *d, char *chave, pessoa_t *valor) {
         return false;
     }
     no->valor = valor;
+    no->prox = NULL;
 
-    d->vetor[indce] = no;
+    if (d->vetor[indice] == NULL) {
+        d->vetor[indice] = no;
+    } else {
+        no_t *aux;
+        aux = d->vetor[indice];
+        while (aux->prox != NULL) {
+            aux = aux->prox;
+        }
+        aux->prox = no;
+    }
 
     return true;
 }
